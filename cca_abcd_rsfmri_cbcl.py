@@ -85,7 +85,6 @@ events = np.array(['baseline_year_1_arm_1', '2_year_follow_up_y_arm_1', '4_year_
 events = events[args.events]
 variables_of_interest = ["cbcl_scr_syn_anxdep_","cbcl_scr_syn_withdep_","cbcl_scr_syn_somatic_", "cbcl_scr_syn_social_",
                          "cbcl_scr_syn_thought_","cbcl_scr_syn_attention_", "cbcl_scr_syn_rulebreak_","cbcl_scr_syn_aggressive_",]
-#                        "cbcl_scr_syn_internal_", "cbcl_scr_syn_external_","cbcl_scr_syn_totprob_"]
 variables_of_interest = [var + args.cbcl_score for var in variables_of_interest]
 
 # load tab (cbcl) data
@@ -173,32 +172,6 @@ if args.n_test > 0:
     #test_sites = np.random.choice(sites, size=(args.n_test, args.n_site_per_test))
 elif args.n_test == 0:
     test_sites = [-1]
-
-# Initialize the list to store split details
-split_records = []
-
-for i_s, sites in enumerate(test_sites):
-    print('Train/test split {}/{}'.format(i_s + 1, len(test_sites)))
-
-    str_sites = '_'.join(['{:0>2d}'.format(int(site)) for site in sites])
-
-    # Split train/test according to site
-    if args.n_test > 0:
-        training_data = data.loc[~data['demo_site_id_l'].isin(sites)]
-        testing_data = data.loc[data['demo_site_id_l'].isin(sites)]
-
-        # Record the information
-        record = {
-            'split_index': i_s,
-            'test_sites': str_sites,
-            'n_train': len(training_data),
-            'n_test': len(testing_data),
-        }
-        split_records.append(record)
-
-# Convert to DataFrame and save
-split_df = pd.DataFrame(split_records)
-split_df.to_csv(f"site_splits_summary_seed_{args.rsfmr_file}_{args.seed}_{np.random.randint(0, 1001)}.csv", index=False)
 
 train_scores, test_scores, best_cv_scores, str_sites_list = [], [], [], []
 for i_s, sites in enumerate(test_sites):

@@ -8,18 +8,15 @@ def load_tab_data(args, tabular_path, id_col, event_col, events, variables_of_in
     tab_data = tab_data[[id_col, event_col] + variables_of_interest]
     tab_data.dropna(subset=variables_of_interest, how='all', inplace=True)
     tab_data = tab_data.loc[tab_data['eventname'].isin(events)]
-    #tab_data.drop(columns='eventname', inplace=True)
     return tab_data
 
 def load_rsfmr_data(args, rsfmri_path, id_col, event_col, events):
     rsfmri_file = 'mri_y_rsfmr_' + args.rsfmr_file + '.csv'
     rsfmri_data = pd.read_csv(os.path.join(rsfmri_path, rsfmri_file))
     rsfmri_data = rsfmri_data.loc[rsfmri_data['eventname'].isin(events)]
-    #rsfmri_data.drop(columns='eventname', inplace=True)
 
     rsfmri_incl = pd.read_csv(os.path.join(rsfmri_path, 'mri_y_qc_incl.csv'))
     rsfmri_incl = rsfmri_incl.loc[rsfmri_incl['eventname'].isin(events)]
-    #rsfmri_incl.drop(columns='eventname', inplace=True)
     rsfmri_data = rsfmri_data.merge(rsfmri_incl[[id_col, event_col, 'imgincl_rsfmri_include']], how='left', on=[id_col, event_col])
     rsfmri_data = rsfmri_data.loc[(rsfmri_data['imgincl_rsfmri_include']==1) | (rsfmri_data[event_col]=='4_year_follow_up_y_arm_1')].drop(columns='imgincl_rsfmri_include')
     return rsfmri_data
@@ -63,17 +60,12 @@ def load_demo_data(args, demo_path, id_col, event_col, events):
     demo_data = demo_data.loc[demo_data['eventname'].isin(['baseline_year_1_arm_1'])]
     demo_data.drop(columns='eventname', inplace=True)
     demo_vars_of_interest = ['demo_brthdat_v2', 'demo_sex_v2', 'race_ethnicity', 'demo_prnt_ed_v2']
-    race_vars = [] #demo_data.columns[demo_data.columns.str.startswith('demo_race_a_p_')].to_list()
-    demo_vars_of_interest += race_vars
     demo_data = demo_data[[id_col] + demo_vars_of_interest]
     demo_data.rename(columns={'race_ethnicity': 'demo_race_ethnicity'}, inplace=True)
-    #demo_data['demo_race_a_p'] = pd.from_dummies(demo_data[race_vars])
     site_data = pd.read_csv(os.path.join(demo_path, 'abcd_y_lt.csv'))
     site_data = site_data.loc[site_data['eventname'].isin(events)]
-    #demo_data = demo_data.merge(site_data[[id_col, event_col, 'site_id_l']], how='left', on=[id_col, event_col])
     demo_data = site_data[[id_col, event_col, 'site_id_l']].merge(demo_data, how='left', on=[id_col])
     demo_data['demo_site_id_l'] = demo_data['site_id_l'].apply(lambda x: int(x[4:]))
-    #demo_data.rename(columns={'site_id_l':'demo_site_id_l'}, inplace=True)
     return demo_data
 
 def load_siblings_data(args, demo_path, id_col):
@@ -88,7 +80,6 @@ def load_ace_data(args, data_path):
     ksads = ksads[['src_subject_id','eventname','ksads_ptsd_raw_760_p','ksads_ptsd_raw_761_p',
                 'ksads_ptsd_raw_766_p','ksads_ptsd_raw_767_p','ksads_ptsd_raw_768_p']]
     df_ace = ksads
-    #df_ace = pd.merge(data,ksads,on=['src_subject_id','eventname'])
     ce = pd.read_csv(os.path.join(data_path, 'culture-environment/ce_p_fes.csv'))
     ce = ce[['src_subject_id','eventname','fam_enviro6_p','fam_enviro3_p']]
 

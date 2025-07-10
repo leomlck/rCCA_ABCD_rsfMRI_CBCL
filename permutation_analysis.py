@@ -28,7 +28,7 @@ parser.add_argument('--launch', type=int, default=1,
                     help='')
 parser.add_argument('--con', type=str, choices=['gp_gp', 'gp_aseg'], default='gp_gp',
                     help='')
-parser.add_argument('--type', type=str, choices=['main', 'sex', 'sex2', 'ace', 's_ace'], default='main',
+parser.add_argument('--type', type=str, choices=['main', 'sex', 'ace'], default='main',
                     help='')
 parser.add_argument('--n_perm', type=int, default=10,
                     help='')
@@ -74,8 +74,6 @@ events = np.array(['baseline_year_1_arm_1', '2_year_follow_up_y_arm_1', '4_year_
 events = events[args.events]
 variables_of_interest = ["cbcl_scr_syn_anxdep_","cbcl_scr_syn_withdep_","cbcl_scr_syn_somatic_", "cbcl_scr_syn_social_",
                          "cbcl_scr_syn_thought_","cbcl_scr_syn_attention_", "cbcl_scr_syn_rulebreak_","cbcl_scr_syn_aggressive_",
-                        #"cbcl_scr_syn_internal_", "cbcl_scr_syn_external_",
-                        #"cbcl_scr_syn_totprob_"
                         ]
 variables_of_interest = [var + args.cbcl_score for var in variables_of_interest]
 
@@ -111,15 +109,6 @@ if args.qc_data:
     data.dropna(inplace=True)
     print('Number of subjects w/ merged data (drop QC control): ', len(data))
 
-
-if perm_args.type == 's_ace':
-    df_ace = load_ace_data(args, data_path)
-    ace_data = data.merge(df_ace[['ace', 'src_subject_id']], how='left', on='src_subject_id')
-    l_ace_threshold = 2
-    h_ace_threshold = 3
-    s_ace_data = ace_data[(ace_data['ace'] < l_ace_threshold) | (ace_data['ace'] > h_ace_threshold)]
-    data = s_ace_data
-
 rsfmri_cols = data.columns[data.columns.str.startswith('rsfmri_')].to_list()
 cbcl_cols = data.columns[data.columns.str.startswith('cbcl_')].to_list()
 cbcl_cols = ["cbcl_scr_syn_anxdep_",
@@ -130,7 +119,6 @@ cbcl_cols = ["cbcl_scr_syn_anxdep_",
              "cbcl_scr_syn_aggressive_",
              "cbcl_scr_syn_withdep_",
              "cbcl_scr_syn_somatic_",
-             #"cbcl_scr_syn_totprob_",
              ]
 cbcl_cols = [var + args.cbcl_score for var in cbcl_cols]
 demo_cols = data.columns[data.columns.str.startswith('demo_')].to_list()
@@ -176,9 +164,6 @@ if perm_args.type == 'main':
 elif perm_args.type == 'sex':
     ext = '_' + perm_args.type
     cors, loadings_cbcl, loadings_con = perm_components_sex(perm_args.n_perm, perm_args.n_comp, str_sites, folder_path, training_data, testing_data, cbcl_cols, rsfmri_cols)
-elif perm_args.type == 'sex2':
-    ext = '_' + perm_args.type 
-    cors, loadings_cbcl, loadings_con = perm_components_sex2(perm_args.n_perm, perm_args.n_comp, str_sites, folder_path, training_data, testing_data, cbcl_cols, rsfmri_cols)
 elif perm_args.type == 'ace'  or perm_args.type == 's_ace':
     ext = '_' + perm_args.type
 
