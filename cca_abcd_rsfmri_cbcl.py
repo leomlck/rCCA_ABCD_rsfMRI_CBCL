@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import random
 import json
 import argparse
@@ -19,6 +18,7 @@ from cca_abcd_rsfmri_cbcl_utils import load_tab_data, load_rsfmr_data, load_demo
 import warnings
 warnings.filterwarnings("ignore")
 
+# Define command-line arguments to configure CCA analysis and preprocessing options
 parser = argparse.ArgumentParser(description='CCA Analysis rs-fMRI connectivity features vs CBCL scores')
 parser.add_argument('--cbcl_score', choices=['r', 't'], type=str, default='r',
                     help='use raw or t scores')
@@ -54,10 +54,11 @@ parser.add_argument('--seed', type=int, default=42,
                     help='select random seed')
 args = parser.parse_args()
 
+# Set random seed for reproducibility
 random.seed(args.seed)
 np.random.seed(args.seed)
 
-# dirs, save and stout files
+# Create a unique directory for the current launch and save all arguments and output logs
 save_path = '/midtier/sablab/scratch/lem4012/save/cca_abcd_rsfmri_cbcl'
 save_path = os.path.join(save_path, 'launch_{:0>3d}'.format(args.launch))
 save_folder = '-'.join(['{}_{}'.format(arg, getattr(args, arg)) for arg in vars(args)])
@@ -69,11 +70,7 @@ orig_stdout = sys.stdout
 f = open(os.path.join(save_path,'out.txt'), 'a')
 sys.stdout = f
 
-import multiprocessing
-n_cores = multiprocessing.cpu_count()
-print('Number of cores :', n_cores)
-
-# load data
+# Define data paths
 data_path = '/midtier/sablab/scratch/lem4012/data/abcd-data-release-5.0/core'
 rsfmri_path = os.path.join(data_path, 'imaging')
 tabular_path = os.path.join(data_path, 'mental-health')
@@ -87,23 +84,23 @@ variables_of_interest = ["cbcl_scr_syn_anxdep_","cbcl_scr_syn_withdep_","cbcl_sc
                          "cbcl_scr_syn_thought_","cbcl_scr_syn_attention_", "cbcl_scr_syn_rulebreak_","cbcl_scr_syn_aggressive_",]
 variables_of_interest = [var + args.cbcl_score for var in variables_of_interest]
 
-# load tab (cbcl) data
+# Load tab (cbcl) data
 tab_data = load_tab_data(args, tabular_path, id_col, event_col, events, variables_of_interest)
 print('Number of subjects w/ cbcl data: ', len(tab_data))
 
-# load rsfmr data
+# Load rsfmr data
 rsfmri_data = load_rsfmr_data(args, rsfmri_path, id_col, event_col, events)
 print('Number of subjects w/ rsfmri data (quality): ', len(rsfmri_data))
 
-# load demographic data
+# Load demographic data
 demo_data = load_demo_data(args, demo_path, id_col, event_col, events)
 print('Number of subjects w/ demo data: ', len(demo_data))
 
-# load siblings data
+# Load siblings data
 siblings_data = load_siblings_data(args, demo_path, id_col)
 print('Number of subjects w/o siblings duplicates: ', len(siblings_data))
 
-# merge data
+# Merge data
 data = siblings_data[[id_col]].merge(rsfmri_data, how='left', on=[id_col]) 
 data = data.merge(tab_data, how='left', on=[id_col, event_col])
 data = data.merge(demo_data, how='left', on=[id_col, event_col])
@@ -111,7 +108,7 @@ print('Number of subjects w/ merged data: ', len(data))
 data.dropna(inplace=True)
 print('Number of subjects w/ merged data (drop NA): ', len(data))
 
-# QC control
+# Filter dataset to include only subjects that passed motion QC and merge with full data
 if args.qc_data:
     qc_subjects = pd.read_csv(os.path.join(data_path, 'subjects_motion_QC.txt'), header=None, names=['src_subject_id'])
     qc_subjects['src_subject_id'] = qc_subjects['src_subject_id'].map(lambda x : x[:4]+'_'+x[4:])
@@ -123,7 +120,7 @@ rsfmri_cols = data.columns[data.columns.str.startswith('rsfmri_')].to_list()
 cbcl_cols = data.columns[data.columns.str.startswith('cbcl_')].to_list()
 demo_cols = data.columns[data.columns.str.startswith('demo_')].to_list()
 
-# transforn rsfmr data to residuals with confounders (demo vars)
+# Transforn rsfmr data to residuals with confounders (demo vars)
 if args.use_residuals_rsfmr:
     if args.residuals_var_rsfmr == 'all':
         conf_cols = demo_cols
@@ -136,7 +133,7 @@ if args.use_residuals_rsfmr:
         data['r_'+rsfmri_var] = data[[rsfmri_var]] - pred
     rsfmri_cols = ['r_'+rsfmri_var for rsfmri_var in rsfmri_cols]
 
-# transforn cbcl data to residuals with confounders (demo vars excluding site) 
+# Transforn cbcl data to residuals with confounders (demo vars excluding site) 
 if args.use_residuals_cbcl:
     conf_cols = demo_cols
     conf_cols.remove('demo_site_id_l')
@@ -163,23 +160,22 @@ param_grid = {'c': [c1, c2],
             }
 print(param_grid)
 
-# train on S-n_site_per_test sites, test on n_site_per_test sites
+# Define test site splits for cross-validation based on the number of test sets specified
 if args.n_test > 0:
     # Usage:
     sites = sorted(data['demo_site_id_l'].unique().tolist())
     test_sites = get_balanced_site_splits(sites, n_splits=10, sites_per_split=3, seed=args.seed)
-    #sites.sort()
-    #test_sites = np.random.choice(sites, size=(args.n_test, args.n_site_per_test))
 elif args.n_test == 0:
     test_sites = [-1]
 
+# Cross-validation loop
 train_scores, test_scores, best_cv_scores, str_sites_list = [], [], [], []
 for i_s, sites in enumerate(test_sites):
     print('Train/test split {}/{}'.format(i_s+1, len(test_sites)))
     str_sites = '_'.join(['{:0>2d}'.format(int(site)) for site in sites])
     str_sites_list.append(str_sites)
 
-    # split train/test according to site
+    # Split train/test according to site
     if args.n_test > 0:
         training_data = data.loc[~data['demo_site_id_l'].isin(sites)]
         testing_data = data.loc[data['demo_site_id_l'].isin(sites)]
@@ -187,7 +183,7 @@ for i_s, sites in enumerate(test_sites):
         training_data = data
         testing_data = data
         
-    # scale data
+    # Scale data
     with_std = True if args.use_std_scaler else False
     train_rsfmri_sc = StandardScaler(with_std=with_std)
     train_cbcl_sc = StandardScaler(with_std=with_std)
@@ -215,13 +211,12 @@ for i_s, sites in enumerate(test_sites):
                         #return_train_score=True
                         ).fit((training_data[rsfmri_cols], training_data[cbcl_cols]))
 
-    to_drop_cols = ['split{}_test_score'.format(i) for i in range(gss.get_n_splits())] #+ ['split{}_train_score'.format(i) for i in range(gss.get_n_splits())] 
+    to_drop_cols = ['split{}_test_score'.format(i) for i in range(gss.get_n_splits())]  
     cv_results = pd.DataFrame(grid_cv.cv_results_).drop(columns=to_drop_cols).sort_values(by='mean_test_score', ascending=False)
-    #cv_results.head(10)
     cv_results.to_csv(os.path.join(save_path, 'cv_results_test_sites_{}.csv'.format(str_sites)))
     best_cv_scores.append(cv_results.loc[cv_results['rank_test_score']==1]['mean_test_score'].to_numpy()[0])
 
-    # Save best params
+    # Save best parameters
     best_params = grid_cv.best_params_
     with open(os.path.join(save_path, 'best_params_test_sites_{}.txt'.format(str_sites)), 'a') as f:
         json.dump(best_params, f, indent=2)
@@ -236,7 +231,7 @@ for i_s, sites in enumerate(test_sites):
     test_scores.append(test_cor)
     print(' Test correlation :', test_cor)
 
-# save results
+# Save results
 results = pd.DataFrame(data={'sites': str_sites_list, 
                              'train_cor': train_scores, 
                              'test_cor': test_scores,

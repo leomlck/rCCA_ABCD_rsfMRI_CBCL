@@ -1,21 +1,14 @@
 import os
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import random
 import json
 from dictparse import DictionaryParser
 import sys
 import argparse
 
-from cca_zoo.linear import rCCA
-from cca_zoo.model_selection import GridSearchCV
-
-from sklearn.model_selection import GroupShuffleSplit, ParameterGrid
-from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 
-from scipy.stats import pearsonr
 
 from cca_abcd_rsfmri_cbcl_utils import load_tab_data, load_rsfmr_data, load_demo_data, load_siblings_data, load_ace_data
 from permutation_analysis_utils import *
@@ -40,6 +33,7 @@ save_path = '/midtier/sablab/scratch/lem4012/save/cca_abcd_rsfmri_cbcl'
 save_path = os.path.join(save_path, 'launch_{:0>3d}'.format(perm_args.launch))
 ext = ''
 
+# Retrieve the launch folder and select the best run for a specific permutation analysis (main, sex, or ACE model) using the corresponding hyperparameters
 results_summary = pd.read_csv(os.path.join(save_path, 'results.csv'), index_col=0)
 results_summary = results_summary.sort_values(by='test_cor', ascending=False)
 
@@ -60,9 +54,11 @@ for arg in args.keys():
     parser.add_param(arg)
 args = parser.parse_dict(args)
 
+# Set random seed for reproducibility
 random.seed(args.seed)
 np.random.seed(args.seed)
 
+# Define data paths
 data_path = '/midtier/sablab/scratch/lem4012/data/abcd-data-release-5.0/core'
 rsfmri_path = os.path.join(data_path, 'imaging')
 tabular_path = os.path.join(data_path, 'mental-health')
@@ -77,23 +73,23 @@ variables_of_interest = ["cbcl_scr_syn_anxdep_","cbcl_scr_syn_withdep_","cbcl_sc
                         ]
 variables_of_interest = [var + args.cbcl_score for var in variables_of_interest]
 
-# load tab (cbcl) data
+# Load tab (cbcl) data
 tab_data = load_tab_data(args, tabular_path, id_col, event_col, events, variables_of_interest)
 print('Number of subjects w/ cbcl data: ', len(tab_data))
 
-# load rsfmr data
+# Load rsfmr data
 rsfmri_data = load_rsfmr_data(args, rsfmri_path, id_col, event_col, events)
 print('Number of subjects w/ rsfmri data (quality): ', len(rsfmri_data))
 
-# load demographic data
+# Load demographic data
 demo_data = load_demo_data(args, demo_path, id_col, event_col, events)
 print('Number of subjects w/ demo data: ', len(demo_data))
 
-# load siblings data
+# Load siblings data
 siblings_data = load_siblings_data(args, demo_path, id_col)
 print('Number of subjects w/o siblings duplicates: ', len(siblings_data))
 
-# merge data
+# Merge data
 data = siblings_data[[id_col]].merge(rsfmri_data, how='left', on=[id_col]) 
 data = data.merge(tab_data, how='left', on=[id_col, event_col])
 data = data.merge(demo_data, how='left', on=[id_col, event_col])
@@ -101,7 +97,7 @@ print('Number of subjects w/ merged data: ', len(data))
 data.dropna(inplace=True)
 print('Number of subjects w/ merged data (drop NA): ', len(data))
 
-# QC control
+# Filter dataset to include only subjects that passed motion QC and merge with full data
 if args.qc_data:
     qc_subjects = pd.read_csv(os.path.join(data_path, 'subjects_motion_QC.txt'), header=None, names=['src_subject_id'])
     qc_subjects['src_subject_id'] = qc_subjects['src_subject_id'].map(lambda x : x[:4]+'_'+x[4:])
@@ -123,7 +119,7 @@ cbcl_cols = ["cbcl_scr_syn_anxdep_",
 cbcl_cols = [var + args.cbcl_score for var in cbcl_cols]
 demo_cols = data.columns[data.columns.str.startswith('demo_')].to_list()
 
-# transforn rsfmr data to residuals with confounders (demo vars)
+# Transforn rsfmr data to residuals with confounders (demo vars)
 if args.use_residuals_rsfmr:
     if args.residuals_var_rsfmr == 'all':
         conf_cols = demo_cols
@@ -136,7 +132,7 @@ if args.use_residuals_rsfmr:
         data['r_'+rsfmri_var] = data[[rsfmri_var]] - pred
     rsfmri_cols = ['r_'+rsfmri_var for rsfmri_var in rsfmri_cols]
 
-# transforn cbcl data to residuals with confounders (demo vars excluding site) 
+# Transforn cbcl data to residuals with confounders (demo vars excluding site) 
 if args.use_residuals_cbcl:
     conf_cols = demo_cols
     conf_cols.remove('demo_site_id_l')
@@ -151,6 +147,7 @@ results = pd.read_csv(os.path.join(folder_path, 'results_train_test_launch_{:0>3
 str_sites = [results.iloc[t]['sites'] for t in range(args.n_test)]
 site_lists = [[int(site) for site in str_site.split('_')] for str_site in str_sites] 
 
+# Define test site splits for cross-validation based on the number of test sets specified
 if args.n_test > 0:
     training_data = [data.loc[~data['demo_site_id_l'].isin(sites)] for sites in site_lists]
     testing_data = [data.loc[data['demo_site_id_l'].isin(sites)] for sites in site_lists]
@@ -158,6 +155,7 @@ elif args.n_test == 0:
     training_data = [data]
     testing_data = [data]
 
+# Run permutation analysis based on the selected type: main, sex-specific, or ACE-specific models, with appropriate data and function calls
 if perm_args.type == 'main':
     ext = '_' + perm_args.type
     cors, loadings_cbcl, loadings_con = perm_components(perm_args.n_perm, perm_args.n_comp, str_sites, folder_path, training_data, testing_data, cbcl_cols, rsfmri_cols)
@@ -175,6 +173,7 @@ elif perm_args.type == 'ace'  or perm_args.type == 's_ace':
 
     cors, loadings_cbcl, loadings_con = perm_components_ace(perm_args.n_perm, perm_args.n_comp, str_sites, folder_path, ace_train_data, ace_test_data, cbcl_cols, rsfmri_cols) 
 
+# Save permutation results to numpy file
 np.savez(os.path.join(folder_path, 'permutation_analysis'+ext+'_n_perm_{}_n_comp_{}.npz'.format(perm_args.n_perm, perm_args.n_comp)),
          cors=cors,
          loadings_cbcl=loadings_cbcl,

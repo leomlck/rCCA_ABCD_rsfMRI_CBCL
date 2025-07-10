@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import random
 
+# Load and filter CBCL tabular data for selected events and variables of interest
 def load_tab_data(args, tabular_path, id_col, event_col, events, variables_of_interest):
     tab_data = pd.read_csv(os.path.join(tabular_path, 'mh_p_cbcl.csv'))
     tab_data = tab_data[[id_col, event_col] + variables_of_interest]
@@ -10,6 +11,7 @@ def load_tab_data(args, tabular_path, id_col, event_col, events, variables_of_in
     tab_data = tab_data.loc[tab_data['eventname'].isin(events)]
     return tab_data
 
+# Load and filter rs-fMRI connectivity data for selected events, applying quality control inclusion criteria
 def load_rsfmr_data(args, rsfmri_path, id_col, event_col, events):
     rsfmri_file = 'mri_y_rsfmr_' + args.rsfmr_file + '.csv'
     rsfmri_data = pd.read_csv(os.path.join(rsfmri_path, rsfmri_file))
@@ -21,40 +23,7 @@ def load_rsfmr_data(args, rsfmri_path, id_col, event_col, events):
     rsfmri_data = rsfmri_data.loc[(rsfmri_data['imgincl_rsfmri_include']==1) | (rsfmri_data[event_col]=='4_year_follow_up_y_arm_1')].drop(columns='imgincl_rsfmri_include')
     return rsfmri_data
 
-def load_rsfmr_data2(args, rsfmri_path, id_col, event_col, events):
-    if args.rsfmr_file == "both":
-        files_to_load = ['cor_gp_gp', 'cor_gp_aseg']
-        df_list = []
-        for fname in files_to_load:
-            rsfmri_file = f'mri_y_rsfmr_{fname}.csv'
-            df = pd.read_csv(os.path.join(rsfmri_path, rsfmri_file))
-            df_list.append(df)
-        rsfmri_data = pd.concat(df_list, axis=1)
-
-        # Remove duplicate columns (e.g., ID or eventname) that were repeated in the two files
-        rsfmri_data = rsfmri_data.loc[:, ~rsfmri_data.columns.duplicated()]
-    else:
-        rsfmri_file = f'mri_y_rsfmr_{args.rsfmr_file}.csv'
-        rsfmri_data = pd.read_csv(os.path.join(rsfmri_path, rsfmri_file))
-
-    # Filter by events
-    rsfmri_data = rsfmri_data.loc[rsfmri_data['eventname'].isin(events)]
-
-    # QC inclusion merge
-    rsfmri_incl = pd.read_csv(os.path.join(rsfmri_path, 'mri_y_qc_incl.csv'))
-    rsfmri_incl = rsfmri_incl.loc[rsfmri_incl['eventname'].isin(events)]
-    rsfmri_data = rsfmri_data.merge(
-        rsfmri_incl[[id_col, event_col, 'imgincl_rsfmri_include']],
-        how='left',
-        on=[id_col, event_col]
-    )
-
-    rsfmri_data = rsfmri_data.loc[
-        (rsfmri_data['imgincl_rsfmri_include'] == 1) | (rsfmri_data[event_col] == '4_year_follow_up_y_arm_1')
-    ].drop(columns='imgincl_rsfmri_include')
-
-    return rsfmri_data
-
+# Load and merge demographic and site data, filtering by event and formatting site IDs
 def load_demo_data(args, demo_path, id_col, event_col, events):
     demo_data = pd.read_csv(os.path.join(demo_path, 'abcd_p_demo.csv'))
     demo_data = demo_data.loc[demo_data['eventname'].isin(['baseline_year_1_arm_1'])]
@@ -68,12 +37,14 @@ def load_demo_data(args, demo_path, id_col, event_col, events):
     demo_data['demo_site_id_l'] = demo_data['site_id_l'].apply(lambda x: int(x[4:]))
     return demo_data
 
+# Load sibling information and keep one unique subject per family to avoid relatedness bias
 def load_siblings_data(args, demo_path, id_col):
     siblings_data = pd.read_csv(os.path.join(demo_path, 'abcd_y_lt.csv'), usecols=[id_col, 'rel_family_id'])
     siblings_data.dropna(inplace=True) 
     siblings_data.drop_duplicates(subset='rel_family_id', inplace=True)
     return siblings_data
 
+# Load and compute Adverse Childhood Experience (ACE) scores by merging multiple ABCD subscales related to trauma, family environment, parental monitoring, and family history
 def load_ace_data(args, data_path):
     ksads = pd.read_csv(os.path.join(data_path, 'mental-health/mh_p_ksads_ptsd.csv'))
 
@@ -117,6 +88,7 @@ def load_ace_data(args, data_path):
 
     return df_ace
 
+# Generate balanced site-based cross-validation splits ensuring all sites are included across splits
 def get_balanced_site_splits(sites, n_splits=10, sites_per_split=3, seed=None):
     if seed is not None:
         random.seed(seed)

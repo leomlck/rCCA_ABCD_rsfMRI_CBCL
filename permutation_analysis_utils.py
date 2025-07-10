@@ -13,6 +13,7 @@ from sklearn.model_selection import train_test_split
 import warnings
 warnings.filterwarnings("ignore")
 
+# Perform permutation testing of CCA model across multiple sites and permutations, storing correlation and loading distributions for CBCL and connectivity features
 def perm_components(n_permutations, n_components, str_sites, folder_path, training_data, testing_data, cbcl_cols, rsfmri_cols):
     n_cbcl = len(cbcl_cols)
     n_con = len(rsfmri_cols)
@@ -49,7 +50,7 @@ def perm_components(n_permutations, n_components, str_sites, folder_path, traini
 
     return cors, loadings_cbcl, loadings_con
 
-
+# Perform permutation testing of CCA separately for male and female subgroups to evaluate sex-specific brain-behavior associations
 def perm_components_sex(n_permutations, n_components, str_sites, folder_path, training_data, testing_data, cbcl_cols, rsfmri_cols):
     sexes = {'male':1, 'female':2}
     n_cbcl = len(cbcl_cols)
@@ -89,6 +90,7 @@ def perm_components_sex(n_permutations, n_components, str_sites, folder_path, tr
 
     return cors, loadings_cbcl, loadings_con
 
+# Perform permutation testing of CCA separately for low and high ACE subgroups to compare brain-behavior mappings across adverse childhood experience levels
 def perm_components_ace(n_permutations, n_components, str_sites, folder_path, training_data, testing_data, cbcl_cols, rsfmri_cols):
     n_cbcl = len(cbcl_cols)
     n_con = len(rsfmri_cols)
