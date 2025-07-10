@@ -1,10 +1,8 @@
 import os
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import random
 import json
-import sys
 
 from cca_zoo.linear import rCCA, CCA
 from scipy.stats import pearsonr

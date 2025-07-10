@@ -4,11 +4,9 @@ import pandas as pd
 import random
 import json
 from dictparse import DictionaryParser
-import sys
 import argparse
 
 from sklearn.linear_model import LinearRegression
-
 
 from cca_abcd_rsfmri_cbcl_utils import load_tab_data, load_rsfmr_data, load_demo_data, load_siblings_data, load_ace_data
 from permutation_analysis_utils import *
