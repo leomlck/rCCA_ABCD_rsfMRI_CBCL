@@ -8,12 +8,6 @@ This project investigates sex-specific associations between resting-state functi
 
 Data used in the preparation of this article were obtained from the Adolescent Brain Cognitive Development℠ (ABCD) Study ([https://abcdstudy.org](https://abcdstudy.org)), publicly released in the NIMH Data Archive (NDA). This is a multisite, longitudinal study designed to recruit more than 10,000 children age 9–10 and follow them over 10 years into early adulthood.
 
-The ABCD Study® is supported by the National Institutes of Health and additional federal partners under award numbers U01DA041048, U01DA050989, U01DA051016, U01DA041022, U01DA051018, U01DA051037, U01DA050987, U01DA041174, U01DA041106, U01DA041117, U01DA041028, U01DA041134, U01DA050988, U01DA051039, U01DA041156, U01DA041025, U01DA041120, U01DA051038, U01DA041148, U01DA041093, U01DA041089, U24DA041123, U24DA041147.  
-A full list of supporters is available at [https://abcdstudy.org/federal-partners.html](https://abcdstudy.org/federal-partners.html).  
-A listing of participating sites and a complete listing of the study investigators can be found at [https://abcdstudy.org/consortium_members/](https://abcdstudy.org/consortium_members/).
-
-ABCD consortium investigators designed and implemented the study and/or provided data but did not necessarily participate in the analysis or writing of this report. This manuscript reflects the views of the authors and may not reflect the opinions or views of the NIH or ABCD consortium investigators.
-
 ---
 
 ## Code Overview
@@ -34,5 +28,4 @@ This repository contains all scripts used to perform the regularized CCA analysi
 ## Citation
 
 If you use this codebase or reference this work in your research, please cite our corresponding paper:
-
-**[TO BE COMPLETED]**
+**[TO BE COMPLETED]** "Regularized CCA Identifies Sex-Specific Brain-Behavior Associations in Adolescent Psychopathology."
