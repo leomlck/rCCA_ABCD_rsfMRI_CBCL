@@ -29,4 +29,6 @@ This repository contains all scripts used to perform the regularized CCA analysi
 
 If you use this codebase or reference this work in your research, please cite our corresponding paper:
 
-**[TO BE COMPLETED]** "Regularized CCA Identifies Sex-Specific Brain-Behavior Associations in Adolescent Psychopathology."
+**[TO BE COMPLETED]** L. Milecki et al. "Regularized CCA Identifies Sex-Specific Brain-Behavior Associations in Adolescent Psychopathology." In submission.
+
+Bibtex:
