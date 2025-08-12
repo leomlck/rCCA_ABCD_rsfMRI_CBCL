@@ -7,7 +7,7 @@ parser.add_argument('--launch', type=int, default=1,
                     help='')
 args = parser.parse_args()
 
-save_path = '/midtier/sablab/scratch/lem4012/save/cca_abcd_rsfmri_cbcl/launch_{:0>3d}'.format(args.launch)
+save_path = '.../save/cca_abcd_rsfmri_cbcl/launch_{:0>3d}'.format(args.launch)
 
 # Collect performance metrics from result files across hyperparameter folders, and compile them into a sorted CSV summary
 folders, train_scores, test_scores = [], [], []

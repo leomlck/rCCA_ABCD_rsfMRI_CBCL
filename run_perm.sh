@@ -2,8 +2,8 @@
 #
 ##SBATCH        --begin=now+1hours
 #SBATCH	       --requeue 
-#SBATCH        --account=minilab 
-#SBATCH        --partition=minilab-cpu 
+#SBATCH        --account=... 
+#SBATCH        --partition=... 
 #SBATCH	       --cpus-per-task=16
 #SBATCH	       --nodes=1 
 #SBATCH        --time=96:00:00 

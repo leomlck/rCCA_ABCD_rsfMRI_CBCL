@@ -59,7 +59,7 @@ random.seed(args.seed)
 np.random.seed(args.seed)
 
 # Create a unique directory for the current launch and save all arguments and output logs
-save_path = '/midtier/sablab/scratch/lem4012/save/cca_abcd_rsfmri_cbcl'
+save_path = '.../save/cca_abcd_rsfmri_cbcl'
 save_path = os.path.join(save_path, 'launch_{:0>3d}'.format(args.launch))
 save_folder = '-'.join(['{}_{}'.format(arg, getattr(args, arg)) for arg in vars(args)])
 save_path = os.path.join(save_path, save_folder) 
@@ -71,7 +71,7 @@ f = open(os.path.join(save_path,'out.txt'), 'a')
 sys.stdout = f
 
 # Define data paths
-data_path = '/midtier/sablab/scratch/lem4012/data/abcd-data-release-5.0/core'
+data_path = '.../data/abcd-data-release-5.0/core'
 rsfmri_path = os.path.join(data_path, 'imaging')
 tabular_path = os.path.join(data_path, 'mental-health')
 demo_path = os.path.join(data_path, 'abcd-general') 
@@ -120,30 +120,6 @@ rsfmri_cols = data.columns[data.columns.str.startswith('rsfmri_')].to_list()
 cbcl_cols = data.columns[data.columns.str.startswith('cbcl_')].to_list()
 demo_cols = data.columns[data.columns.str.startswith('demo_')].to_list()
 
-# Transforn rsfmr data to residuals with confounders (demo vars)
-if args.use_residuals_rsfmr:
-    if args.residuals_var_rsfmr == 'all':
-        conf_cols = demo_cols
-    else:
-        conf_cols = [args.residuals_var_rsfmr]
-    reg = LinearRegression()
-    for rsfmri_var in rsfmri_cols:
-        reg.fit(data[conf_cols], data[[rsfmri_var]])
-        pred = reg.predict(data[conf_cols])
-        data['r_'+rsfmri_var] = data[[rsfmri_var]] - pred
-    rsfmri_cols = ['r_'+rsfmri_var for rsfmri_var in rsfmri_cols]
-
-# Transforn cbcl data to residuals with confounders (demo vars excluding site) 
-if args.use_residuals_cbcl:
-    conf_cols = demo_cols
-    conf_cols.remove('demo_site_id_l')
-    reg = LinearRegression()
-    for cbcl_var in cbcl_cols:
-        reg.fit(data[conf_cols], data[[cbcl_var]])
-        pred = reg.predict(data[conf_cols])
-        data['r_'+cbcl_var] = data[[cbcl_var]] - pred
-    cbcl_cols = ['r_'+cbcl_var for cbcl_var in cbcl_cols]
-    
 # Custom scoring function
 def scorer(estimator, X):
     dim_corrs = estimator.score(X)
@@ -196,6 +172,29 @@ for i_s, sites in enumerate(test_sites):
 
     testing_data[rsfmri_cols] =  test_rsfmri_sc.fit_transform(testing_data[rsfmri_cols])
     testing_data[cbcl_cols] =  test_cbcl_sc.fit_transform(testing_data[cbcl_cols])
+
+    # Transforn rsfmr data to residuals with confounders (demo vars)
+    if args.use_residuals_rsfmr:
+        if args.residuals_var_rsfmr == 'all':
+            conf_cols = demo_cols
+        else:
+            conf_cols = [args.residuals_var_rsfmr]
+
+        for var in rsfmri_cols:
+            model = LinearRegression().fit(training_data[conf_cols], training_data[[var]])
+            training_data['r_' + var] = training_data[[var]] - model.predict(training_data[conf_cols])
+            testing_data['r_' + var] = testing_data[[var]] - model.predict(testing_data[conf_cols])
+        rsfmri_cols = ['r_' + var for var in rsfmri_cols]
+
+    # Transforn cbcl data to residuals with confounders (demo vars excluding site) 
+    if args.use_residuals_cbcl:
+        conf_cols_cbcl = demo_cols.copy()
+        conf_cols_cbcl.remove('demo_site_id_l')
+        for var in cbcl_cols:
+            model = LinearRegression().fit(training_data[conf_cols_cbcl], training_data[[var]])
+            training_data['r_' + var] = training_data[[var]] - model.predict(training_data[conf_cols_cbcl])
+            testing_data['r_' + var] = testing_data[[var]] - model.predict(testing_data[conf_cols_cbcl])
+        cbcl_cols = ['r_' + var for var in cbcl_cols]
 
     # CV splits
     gss = GroupShuffleSplit(n_splits=args.n_cv_splits, test_size=0.2)

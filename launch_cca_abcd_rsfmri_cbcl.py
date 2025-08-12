@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.model_selection import ParameterGrid
 
 # Create launch folder
-save_path = '/midtier/sablab/scratch/lem4012/save/cca_abcd_rsfmri_cbcl'
+save_path = '.../save/cca_abcd_rsfmri_cbcl'
 launch = 1 if len([f for f in os.listdir(save_path) if f.split('_')[0]=='launch'])==0 else np.max([int(f[-3:]) for f in os.listdir(save_path) if f.split('_')[0]=='launch'])+1
 save_path = os.path.join(save_path, 'launch_{:0>3d}'.format(launch))
 os.makedirs(save_path, exist_ok=True)

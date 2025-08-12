@@ -12,7 +12,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Perform permutation testing of CCA model across multiple sites and permutations, storing correlation and loading distributions for CBCL and connectivity features
-def perm_components(n_permutations, n_components, str_sites, folder_path, training_data, testing_data, cbcl_cols, rsfmri_cols):
+def perm_components(n_permutations, n_components, str_sites, folder_path, training_data, testing_data, cbcl_cols, rsfmri_cols, demo_cols):
     n_cbcl = len(cbcl_cols)
     n_con = len(rsfmri_cols)
     cors = np.zeros((2, len(str_sites), n_components, n_permutations))
@@ -21,6 +21,30 @@ def perm_components(n_permutations, n_components, str_sites, folder_path, traini
 
     for i_s, str_site in enumerate(str_sites):
         print('Test sites :', str_site)
+
+        # Transforn rsfmr data to residuals with confounders (demo vars)
+        if args.use_residuals_rsfmr:
+            if args.residuals_var_rsfmr == 'all':
+                conf_cols = demo_cols
+            else:
+                conf_cols = [args.residuals_var_rsfmr]
+
+            for var in rsfmri_cols:
+                model = LinearRegression().fit(training_data[i_s][conf_cols], training_data[i_s][[var]])
+                training_data[i_s]['r_' + var] = training_data[i_s][[var]] - model.predict(training_data[i_s][conf_cols])
+                testing_data[i_s]['r_' + var] = testing_data[i_s][[var]] - model.predict(testing_data[i_s][conf_cols])
+            rsfmri_cols = ['r_' + var for var in rsfmri_cols]
+
+        # Transforn cbcl data to residuals with confounders (demo vars excluding site)
+        if args.use_residuals_cbcl:
+            conf_cols_cbcl = demo_cols.copy()
+            conf_cols_cbcl.remove('demo_site_id_l')
+            for var in cbcl_cols:
+                model = LinearRegression().fit(training_data[i_s][conf_cols_cbcl], training_data[i_s][[var]])
+                training_data[i_s]['r_' + var] = training_data[i_s][[var]] - model.predict(training_data[i_s][conf_cols_cbcl])
+                testing_data[i_s]['r_' + var] = testing_data[i_s][[var]] - model.predict(testing_data[i_s][conf_cols_cbcl])
+            cbcl_cols = ['r_' + var for var in cbcl_cols]
+
         best_params_file = os.path.join(folder_path, 'best_params_test_sites_{}.txt'.format(str_site))
         with open(best_params_file) as f:
             best_params = json.load(f)
@@ -49,7 +73,7 @@ def perm_components(n_permutations, n_components, str_sites, folder_path, traini
     return cors, loadings_cbcl, loadings_con
 
 # Perform permutation testing of CCA separately for male and female subgroups to evaluate sex-specific brain-behavior associations
-def perm_components_sex(n_permutations, n_components, str_sites, folder_path, training_data, testing_data, cbcl_cols, rsfmri_cols):
+def perm_components_sex(n_permutations, n_components, str_sites, folder_path, training_data, testing_data, cbcl_cols, rsfmri_cols, demo_cols):
     sexes = {'male':1, 'female':2}
     n_cbcl = len(cbcl_cols)
     n_con = len(rsfmri_cols)
@@ -59,6 +83,29 @@ def perm_components_sex(n_permutations, n_components, str_sites, folder_path, tr
 
     for i_s, str_site in enumerate(str_sites):
         print('Test sites :', str_site)
+        # Transforn rsfmr data to residuals with confounders (demo vars)
+        if args.use_residuals_rsfmr:
+            if args.residuals_var_rsfmr == 'all':
+                conf_cols = demo_cols
+            else:
+                conf_cols = [args.residuals_var_rsfmr]
+
+            for var in rsfmri_cols:
+                model = LinearRegression().fit(training_data[i_s][conf_cols], training_data[i_s][[var]])
+                training_data[i_s]['r_' + var] = training_data[i_s][[var]] - model.predict(training_data[i_s][conf_cols])
+                testing_data[i_s]['r_' + var] = testing_data[i_s][[var]] - model.predict(testing_data[i_s][conf_cols])
+            rsfmri_cols = ['r_' + var for var in rsfmri_cols]
+
+        # Transforn cbcl data to residuals with confounders (demo vars excluding site)
+        if args.use_residuals_cbcl:
+            conf_cols_cbcl = demo_cols.copy()
+            conf_cols_cbcl.remove('demo_site_id_l')
+            for var in cbcl_cols:
+                model = LinearRegression().fit(training_data[i_s][conf_cols_cbcl], training_data[i_s][[var]])
+                training_data[i_s]['r_' + var] = training_data[i_s][[var]] - model.predict(training_data[i_s][conf_cols_cbcl])
+                testing_data[i_s]['r_' + var] = testing_data[i_s][[var]] - model.predict(testing_data[i_s][conf_cols_cbcl])
+            cbcl_cols = ['r_' + var for var in cbcl_cols]
+
         best_params_file = os.path.join(folder_path, 'best_params_test_sites_{}.txt'.format(str_site))
         with open(best_params_file) as f:
             best_params = json.load(f)
@@ -89,7 +136,7 @@ def perm_components_sex(n_permutations, n_components, str_sites, folder_path, tr
     return cors, loadings_cbcl, loadings_con
 
 # Perform permutation testing of CCA separately for low and high ACE subgroups to compare brain-behavior mappings across adverse childhood experience levels
-def perm_components_ace(n_permutations, n_components, str_sites, folder_path, training_data, testing_data, cbcl_cols, rsfmri_cols):
+def perm_components_ace(n_permutations, n_components, str_sites, folder_path, training_data, testing_data, cbcl_cols, rsfmri_cols, demo_cols):
     n_cbcl = len(cbcl_cols)
     n_con = len(rsfmri_cols)
     cors = np.zeros((2, len(str_sites), n_components, n_permutations))
@@ -98,6 +145,28 @@ def perm_components_ace(n_permutations, n_components, str_sites, folder_path, tr
 
     for i_s, str_site in enumerate(str_sites):
         print('Test sites :', str_site)
+        if args.use_residuals_rsfmr:
+            if args.residuals_var_rsfmr == 'all':
+                conf_cols = demo_cols
+            else:
+                conf_cols = [args.residuals_var_rsfmr]
+
+            for var in rsfmri_cols:
+                model = LinearRegression().fit(training_data[i_s][conf_cols], training_data[i_s][[var]])
+                training_data[i_s]['r_' + var] = training_data[i_s][[var]] - model.predict(training_data[i_s][conf_cols])
+                testing_data[i_s]['r_' + var] = testing_data[i_s][[var]] - model.predict(testing_data[i_s][conf_cols])
+            rsfmri_cols = ['r_' + var for var in rsfmri_cols]
+
+        # Transforn cbcl data to residuals with confounders (demo vars excluding site)
+        if args.use_residuals_cbcl:
+            conf_cols_cbcl = demo_cols.copy()
+            conf_cols_cbcl.remove('demo_site_id_l')
+            for var in cbcl_cols:
+                model = LinearRegression().fit(training_data[i_s][conf_cols_cbcl], training_data[i_s][[var]])
+                training_data[i_s]['r_' + var] = training_data[i_s][[var]] - model.predict(training_data[i_s][conf_cols_cbcl])
+                testing_data[i_s]['r_' + var] = testing_data[i_s][[var]] - model.predict(testing_data[i_s][conf_cols_cbcl])
+            cbcl_cols = ['r_' + var for var in cbcl_cols]
+
         best_params_file = os.path.join(folder_path, 'best_params_test_sites_{}.txt'.format(str_site))
         with open(best_params_file) as f:
             best_params = json.load(f)
