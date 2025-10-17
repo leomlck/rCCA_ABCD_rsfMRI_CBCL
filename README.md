@@ -2,7 +2,7 @@
 
 This project investigates sex-specific associations between resting-state functional connectivity (rs-fMRI) and psychiatric symptoms in early adolescence using the ABCD dataset. Using Canonical Correlation Analysis (CCA) and rigorous cross-validation, we identify multivariate brain-behavior mappings across eight Child Behavior Checklist (CBCL) syndrome scales. In contrast to previous studies, we explicitly model sex differences in these brain-behavior associations, revealing distinct neural correlates for attention, thought, and internalizing problems in males and females. Our findings highlight the importance of considering sex-specific mechanisms in adolescent psychopathology and support the development of sex-informed clinical strategies.
 
-📄 Read the paper here: [DOI](#) **[TO BE COMPLETED]**
+📄 Read the paper here: [DOI](https://doi.org/10.1038/s41398-025-03678-9)
 
 ---
 
@@ -31,6 +31,6 @@ This repository contains all scripts used to perform the regularized CCA analysi
 
 If you use this codebase or reference this work in your research, please cite our corresponding paper:
 
-**[TO BE COMPLETED]** L. Milecki, C. Gonzalez, E. Adeli, K. B. Nooner, M. R. Sabuncu, A. Kuceyeski, and Q. Zhao. "Regularized CCA Identifies Sex-Specific Brain-Behavior Associations in Adolescent Psychopathology." In submission.
+L. Milecki, C. Gonzalez, E. Adeli, K. B. Nooner, M. R. Sabuncu, A. Kuceyeski, and Q. Zhao. ''Regularized CCA identifies sex-specific brain-behavior associations in adolescent psychopathology.'' Transl Psychiatry 15, 405 (2025). https://doi.org/10.1038/s41398-025-03678-9
 
 Bibtex: **[TO BE COMPLETED]**
