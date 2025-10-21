@@ -33,17 +33,17 @@ If you use this codebase or reference this work in your research, please cite ou
 
 L. Milecki, C. Gonzalez, E. Adeli, K. B. Nooner, M. R. Sabuncu, A. Kuceyeski, and Q. Zhao. ''Regularized CCA identifies sex-specific brain-behavior associations in adolescent psychopathology.'' Transl Psychiatry 15, 405 (2025). https://doi.org/10.1038/s41398-025-03678-9
 
-Bibtex: 
-@article{Milecki2025RegularizedPsychopathology,
-  title = {Regularized CCA identifies sex-specific brain-behavior associations in adolescent psychopathology},
-  volume = {15},
-  ISSN = {2158-3188},
-  url = {http://dx.doi.org/10.1038/s41398-025-03678-9},
-  DOI = {10.1038/s41398-025-03678-9},
-  number = {1},
-  journal = {Translational Psychiatry},
-  publisher = {Springer Science and Business Media LLC},
-  author = {Milecki,  Leo and Gonzalez,  Camila and Adeli,  Ehsan and Nooner,  Kate B. and Sabuncu,  Mert R. and Kuceyeski,  Amy and Zhao,  Qingyu},
-  year = {2025},
-  month = oct 
+Bibtex:   
+@article{Milecki2025RegularizedPsychopathology,  
+  title = {Regularized CCA identifies sex-specific brain-behavior associations in adolescent psychopathology},  
+  volume = {15},  
+  ISSN = {2158-3188},  
+  url = {http://dx.doi.org/10.1038/s41398-025-03678-9},  
+  DOI = {10.1038/s41398-025-03678-9},  
+  number = {1},  
+  journal = {Translational Psychiatry},  
+  publisher = {Springer Science and Business Media LLC},  
+  author = {Milecki,  Leo and Gonzalez,  Camila and Adeli,  Ehsan and Nooner,  Kate B. and Sabuncu,  Mert R. and Kuceyeski,  Amy and Zhao,  Qingyu},  
+  year = {2025},  
+  month = oct   
 }
